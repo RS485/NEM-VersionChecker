@@ -1,0 +1,20 @@
+{
+  "modinfoversion": 2,
+  "modlist": [{
+    "modid": "NEMVersionChecker",
+    "name": "NEM Version Checker",
+    "description": "",
+    "version": "%VERSION%",
+    "mcversion": "%MCVERSION%",
+    "url": "",
+    "updateUrl": "",
+    "authors": [ "RS485" ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "requiredMods": [ "Forge" ],
+    "dependencies": [],
+    "dependants": [],
+    "useDependencyInformation": "true"
+  }]
+}

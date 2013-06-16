@@ -1,0 +1,225 @@
+<project name="NEM-VersionChecker" basedir="../" default="main">
+	<property environment="env"/>
+
+	<!-- Properties -->
+	<property name="build.dir"            value="build"/>
+	<property name="src.dir"              value="src"/>
+	<property name="test.dir"             value="test"/>
+	<property name="sign.dir"             value="/home/jenkins/.sign"/>
+
+	<property name="download.dir"         value="download"/>
+	<property name="files.minecraft.dir"  value="jars"/>
+
+	<property name="classes.dir"          value="${build.dir}/classes"/>
+	<property name="jar.dir"              value="${build.dir}/dist"/>
+	<property name="lib.dir"              value="${build.dir}/lib"/>
+
+	<property name="mcp.dir"              value="${build.dir}/mcp"/>
+	<property name="forge.dir"            value="${mcp.dir}/forge"/>
+	
+	<property name="clientsrc.dir"        value="${mcp.dir}/src/minecraft"/>
+	<property name="commonsrc.dir"        value="${clientsrc.dir}"/>
+	
+	<property file="${clientsrc.dir}/fmlversion.properties" />
+	
+	<property name="downloadserver"       value="http://www.theZorro266.com"/>
+	<property name="downloadserver.dir"   value="rs485/"/>
+	<property name="downloadserver.full"  value="${downloadserver}/${downloadserver.dir}"/>
+
+	<property name="antcont.version"      value="1.0b3"/>
+	<property name="mcp.version"          value="751"/>
+	<property name="mc.version"           value="1.5.2"/>
+	<property name="forge.version"        value="7.8.0.685"/>
+	<property name="lombok.version"       value="0.11.8"/>
+	<property name="jarjar.version"       value="1.4"/>
+	<property name="gson.version"         value="2.2.4"/>
+	<property name="nem-vc.version"       value="0.1.0"/>
+	<property name="nem-vc.version.full"  value="${nem-vc.version}.${BUILD_NUMBER}"/>
+
+	<!-- Targets -->
+	<target name="init-msg">
+		<echo message="Starting build for ${nem-vc.version.full} for MC ${mc.version}"/>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+	</target>
+
+	<target name="setup">
+		<mkdir dir="${download.dir}"/>
+
+		<get src="${downloadserver.full}mcp${mcp.version}.zip" dest="${download.dir}" usetimestamp="True"/>
+		<get src="${downloadserver.full}minecraftforge-src-${mc.version}-${forge.version}.zip" dest="${download.dir}" usetimestamp="True"/>
+		<get src="${downloadserver.full}ant-contrib-${antcont.version}-bin.zip" dest="${download.dir}" usetimestamp="True"/>
+		<get src="${downloadserver.full}jarjar-${jarjar.version}.jar" dest="${download.dir}" usetimestamp="True"/>
+		<get src="${downloadserver.full}gson-${gson.version}.jar" dest="${download.dir}" usetimestamp="True"/>
+		<get src="${downloadserver.full}lombok-${lombok.version}.jar" dest="${download.dir}" usetimestamp="True"/>
+
+		<echo message="Download finished"/>
+
+
+		<unzip dest="${lib.dir}" failOnEmptyArchive="true">
+			<fileset dir="${download.dir}">
+				<include name="ant-contrib-${antcont.version}-bin.zip"/>
+			</fileset>
+		</unzip>
+		<!-- Pull in ant-contrib for if task -->
+		<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+			<classpath>
+				<pathelement location="${lib.dir}/ant-contrib/ant-contrib-${antcont.version}.jar"/>
+			</classpath>
+		</taskdef>
+		
+		<unzip dest="${mcp.dir}" failOnEmptyArchive="true">
+			<fileset dir="${download.dir}">
+				<include name="mcp${mcp.version}.zip"/>
+			</fileset>
+		</unzip>
+		
+		<unzip dest="${mcp.dir}" failOnEmptyArchive="true">
+			<fileset dir="${download.dir}">
+				<include name="minecraftforge-src-${mc.version}-${forge.version}.zip"/>
+			</fileset>
+		</unzip>
+
+		<echo message="Unpacking finished"/>
+
+		<chmod file="${mcp.dir}/updatemd5.sh" perm="+x"/>
+		<chmod file="${mcp.dir}/updatemcp.sh" perm="+x"/>
+		<chmod file="${mcp.dir}/recompile.sh" perm="+x"/>
+		<chmod file="${mcp.dir}/reobfuscate_srg.sh" perm="+x"/>
+		<chmod file="${forge.dir}/install.sh" perm="+x"/>
+
+		<!-- if your building on OSX these 2 should be executable -->
+		<chmod file="${mcp.dir}/runtime/bin/astyle-osx" perm="+x"/>
+		<chmod file="${mcp.dir}/runtime/bin/jad-osx" perm="+x"/>
+		<!-- Install forge -->
+		<exec dir="${forge.dir}" executable="cmd" osfamily="windows" failonerror="true">
+			<arg line="/c install.cmd"/>
+		</exec>
+
+		<exec dir="${forge.dir}" executable="sh" osfamily="unix" failonerror="true">
+			<arg value="install.sh"/>
+		</exec>
+		
+		<copy file="${download.dir}/lombok-${lombok.version}.jar" todir="${mcp.dir}/lib"/>
+		<copy file="${download.dir}/gson-${gson.version}.jar" todir="${mcp.dir}/lib"/>
+		
+		<echo message="Decompile finished"/>
+	</target>
+
+
+	<target name="copySRC" >
+		<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+			<classpath>
+				<pathelement location="${lib.dir}/ant-contrib/ant-contrib-${antcont.version}.jar"/>
+			</classpath>
+		</taskdef>
+		<echo message="Loaded ant-contrib"/>
+
+		<!-- Delete nem-vc source in build space -->
+		<delete dir="${commonsrc.dir}/rs485"/>
+		<echo message="Removed old code"/>
+
+		<!-- Copy nem-vc source -->
+		<copy todir="${commonsrc.dir}">
+			<fileset dir="${src.dir}/common"/>
+		</copy>
+		<replace file="${commonsrc.dir}/rs485/nem/versionchecker/NEMVersionChecker.java" token="%VERSION%" value="${nem-vc.version.full}"/>
+		
+		<echo message="Loading FingerPrint"/>
+		<if>
+			<available file="${sign.dir}/.fingerprint"/>
+			<then>
+				<loadfile property="fingerprint" srcFile="${sign.dir}/.fingerprint"/>
+				<replace file="${commonsrc.dir}/rs485/nem/versionchecker/NEMVersionChecker.java" token="%------------CERTIFICATE-SUM-----------%" value='*/ certificateFingerprint="${fingerprint}", /*'/>
+			</then>
+		</if>
+	</target>
+
+
+	<target name="compile" depends="copySRC">
+
+		<echo message="Compiling version ${nem-vc.version.full}"/>
+
+		<!-- Recompile -->
+		<exec dir="${mcp.dir}" executable="cmd" osfamily="windows" failonerror="true">
+			<arg line="/c recompile.bat --client"/>
+		</exec>
+
+		<exec dir="${mcp.dir}" executable="sh" osfamily="unix" failonerror="true">
+			<arg value="recompile.sh"/>
+		</exec>
+
+		<!-- Reobf -->
+		<exec dir="${mcp.dir}" executable="cmd" osfamily="windows" failonerror="true">
+			<arg line="/c reobfuscate_srg.bat --client"/>
+		</exec>
+
+		<exec dir="${mcp.dir}" executable="sh" osfamily="unix" failonerror="true">
+			<arg value="reobfuscate_srg.sh"/>
+		</exec>
+
+		<!-- Copy nem-vc classes -->
+		<copy todir="${classes.dir}/client">
+			<fileset dir="${mcp.dir}/reobf/minecraft"/>
+		</copy>
+
+		<!-- Copy resoucres -->
+		<copy todir="${classes.dir}/client">
+			<fileset dir="${src.dir}/resources"></fileset>
+		</copy>
+
+		<replace file="${classes.dir}/client/mcmod.info" token="%VERSION%" value="${nem-vc.version.full}"/>
+		<replace file="${classes.dir}/client/mcmod.info" token="%MCVERSION%" value="${mc.version}"/>
+
+		<echo message="Compiling finished"/>
+
+	</target>
+
+	<target name="package-simple" depends="compile">
+		<echo message="Packing version ${nem-vc.version.full}"/>
+
+		<taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+        classpath="${download.dir}/jarjar-${jarjar.version}.jar"/>
+
+		<jarjar destfile="${jar.dir}/NEM-VersionChecker-MC${mc.version}-${nem-vc.version.full}.jar" basedir="${classes.dir}/client">
+			<zipfileset src="${download.dir}/gson-${gson.version}.jar"/>
+			<rule pattern="com.google.gson.**" result="rs485.nem.versionchecker.com.google.gson.@1"/>
+		</jarjar>
+
+		<echo message="Packing finished"/>
+	</target>
+
+	<target name="package-sign" depends="compile">
+		<echo message="Loading SignSettings"/>
+		<loadfile property="key" srcFile="${sign.dir}/.key"/>
+
+		<echo message="Packing version ${nem-vc.version.full}"/>
+
+		<taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+        classpath="${download.dir}/jarjar-${jarjar.version}.jar"/>
+
+		<jarjar destfile="${jar.dir}/NEM-VersionChecker-MC${mc.version}-${nem-vc.version.full}.jar" basedir="${classes.dir}/client">
+			<zipfileset src="${download.dir}/gson-${gson.version}.jar"/>
+			<rule pattern="com.google.gson.**" result="rs485.nem.versionchecker.com.google.gson.@1"/>
+
+			<manifest>
+				<attribute name="Built-By" value="RS485-Jenkins"/>
+				<attribute name="Implementation-Vendor" value="RS485"/>
+				<attribute name="Implementation-Title" value="NEM-VersionChecker"/>
+				<attribute name="Implementation-Version" value="${nem-vc.version.full}"/>
+			</manifest>
+		</jarjar>
+
+		<signjar jar="${jar.dir}/NEM-VersionChecker-MC${mc.version}-${nem-vc.version.full}.jar" alias="RS485" keystore="${sign.dir}/.keystore" storepass="${key}"/>
+
+		<echo message="Packing finished"/>
+
+	</target>
+		
+	<target name="main" depends="init-msg, clean, setup, package-simple"/>
+	
+	<target name="ci" depends="init-msg, clean, setup, package-sign"/>
+
+</project>
