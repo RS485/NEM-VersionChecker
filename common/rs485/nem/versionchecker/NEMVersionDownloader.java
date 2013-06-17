@@ -7,8 +7,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
 
-import org.lwjgl.opengl.Display;
-
 import lombok.Getter;
 
 import com.google.gson.Gson;
@@ -20,19 +18,20 @@ public class NEMVersionDownloader extends Thread {
 
 	private final Gson gson;
 	
+	@SuppressWarnings("resource")
 	public NEMVersionDownloader(String mcVersion) {
 		gson = new Gson();
 		nemMcVersion = mcVersion;
 		
 		// Get the appropriate NEM version string
+		InputStream inputStream = null;
+		Scanner s = null;
 		try {
 			URL url = new URL("http://bot.notenoughmods.com/?json");
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			InputStream inputStream;
 			inputStream = (InputStream) conn.getContent();
-			Scanner s = new Scanner(inputStream).useDelimiter("\\A");
+			s = new Scanner(inputStream).useDelimiter("\\A");
 			String string = s.next();
-			s.close();
 			String[] availableMcVersions = gson.fromJson(string, String[].class);
 			for(String v : availableMcVersions) {
 				if(v.contains(mcVersion)) {
@@ -44,6 +43,11 @@ public class NEMVersionDownloader extends Thread {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				s.close();
+				inputStream.close();
+			} catch(Throwable e2) { }
 		}
 		
 		// Start the thread

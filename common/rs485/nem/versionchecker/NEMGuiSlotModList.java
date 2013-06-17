@@ -49,7 +49,7 @@ public class NEMGuiSlotModList extends GuiSlotModList {
 	        	if(match == null) {
 	        		colorFirst = 0xCCCC00;
 	        	} else {
-	        		if(match.isUpToDate(mc.getVersion()) || match.isUpToDate(mc.getDisplayVersion())) {
+	        		if(match.isUpToDate(mc.getVersion(), mc.getDisplayVersion())) {
 	        			colorFirst = 0x00CC00;
 	        		} else {
 	        			colorFirst = 0xCC0000;
