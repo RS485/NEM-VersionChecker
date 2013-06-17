@@ -35,12 +35,12 @@ public class NEMVersionChecker {
 	@Getter
 	private String MCVersion = "1.5.2";
 	
-	private NEMEventLisener listener;
+	private NEMEventListener listener;
 	
 	@PreInit
 	public void LoadConfig(FMLPreInitializationEvent evt) throws NoSuchFieldException, SecurityException {
 		log = evt.getModLog();
-		listener = new NEMEventLisener();
+		listener = new NEMEventListener();
 		TickRegistry.registerTickHandler(listener, Side.CLIENT);
 	}
 	

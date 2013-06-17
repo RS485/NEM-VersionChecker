@@ -14,7 +14,7 @@ import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.TickType;
 
-public class NEMEventLisener implements ITickHandler {
+public class NEMEventListener implements ITickHandler {
 
 	private Field modList;
 	private Field parent;
@@ -22,7 +22,7 @@ public class NEMEventLisener implements ITickHandler {
 	private Field listWidth;
 	private Field buttonList;
 	
-	public NEMEventLisener() throws NoSuchFieldException, SecurityException {
+	public NEMEventListener() throws NoSuchFieldException, SecurityException {
 		modList = GuiModList.class.getDeclaredField("modList");
 		parent = GuiSlotModList.class.getDeclaredField("parent");
 		mods = GuiSlotModList.class.getDeclaredField("mods");
