@@ -22,7 +22,7 @@ import cpw.mods.fml.relauncher.Side;
 public class NEMVersionChecker {
 	
 	@Getter
-	@Instance("NEMVersionChecker")
+	@Instance("NEM-VersionChecker")
 	private static NEMVersionChecker instance;
 	
 	@Getter
