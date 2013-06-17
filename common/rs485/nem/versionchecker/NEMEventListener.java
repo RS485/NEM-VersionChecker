@@ -42,23 +42,25 @@ public class NEMEventListener implements ITickHandler {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public void tickStart(EnumSet<TickType> type, Object... tickData) {
-		if(type.contains(TickType.RENDER)) {
-			if(FMLClientHandler.instance().getClient().currentScreen!= null && FMLClientHandler.instance().getClient().currentScreen.getClass() == GuiModList.class) {
-				try {
-					GuiSlotModList old = (GuiSlotModList) modList.get(FMLClientHandler.instance().getClient().currentScreen);
-					if(old.getClass() != NEMGuiSlotModList.class) {
-						GuiModList one = (GuiModList) parent.get(old);
-						ArrayList<ModContainer> two = (ArrayList<ModContainer>) mods.get(old);
-						Integer three = (Integer) listWidth.get(old);
-						NEMGuiSlotModList newGui = new NEMGuiSlotModList(one, two, three);
-						newGui.registerScrollButtons((List) buttonList.get(FMLClientHandler.instance().getClient().currentScreen), 7, 8);
-						modList.set(FMLClientHandler.instance().getClient().currentScreen, newGui);
-						new NEMVersionDownloader(NEMVersionChecker.getInstance().getMCVersion());
+		if(!NEMVersionChecker.getInstance().isDisabled()) {
+			if(type.contains(TickType.RENDER)) {
+				if(FMLClientHandler.instance().getClient().currentScreen!= null && FMLClientHandler.instance().getClient().currentScreen.getClass() == GuiModList.class) {
+					try {
+						GuiSlotModList old = (GuiSlotModList) modList.get(FMLClientHandler.instance().getClient().currentScreen);
+						if(old.getClass() != NEMGuiSlotModList.class) {
+							GuiModList one = (GuiModList) parent.get(old);
+							ArrayList<ModContainer> two = (ArrayList<ModContainer>) mods.get(old);
+							Integer three = (Integer) listWidth.get(old);
+							NEMGuiSlotModList newGui = new NEMGuiSlotModList(one, two, three);
+							newGui.registerScrollButtons((List) buttonList.get(FMLClientHandler.instance().getClient().currentScreen), 7, 8);
+							modList.set(FMLClientHandler.instance().getClient().currentScreen, newGui);
+							new NEMVersionDownloader(NEMVersionChecker.getInstance().getMCVersion());
+						}
+					} catch(IllegalArgumentException e) {
+						e.printStackTrace();
+					} catch(IllegalAccessException e) {
+						e.printStackTrace();
 					}
-				} catch(IllegalArgumentException e) {
-					e.printStackTrace();
-				} catch(IllegalAccessException e) {
-					e.printStackTrace();
 				}
 			}
 		}

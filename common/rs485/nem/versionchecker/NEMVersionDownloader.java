@@ -66,6 +66,7 @@ public class NEMVersionDownloader extends Thread {
 			e.printStackTrace();
 		} catch(IOException e) {
 			NEMVersionChecker.getInstance().getLog().severe("Cannot get a modlist json for your Minecraft version " + nemMcVersion);
+			NEMVersionChecker.getInstance().disable();
 			e.printStackTrace();
 		}
 	}

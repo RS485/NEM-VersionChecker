@@ -34,10 +34,17 @@ public class NEMVersionChecker {
 	@Setter(value=AccessLevel.PROTECTED)
 	private NEMModInfo[] modInformation = null;
 	
+	@Getter
+	private boolean disabled = false;
+	
 	private NEMEventListener listener;
 	
 	public String getMCVersion() {
 		return new CallableMinecraftVersion(null).minecraftVersion();
+	}
+	
+	public void disable() {
+		disabled = true;
 	}
 	
 	@PreInit
