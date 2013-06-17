@@ -2,6 +2,8 @@ package rs485.nem.versionchecker;
 
 import java.util.logging.Logger;
 
+import net.minecraft.crash.CallableMinecraftVersion;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,10 +34,11 @@ public class NEMVersionChecker {
 	@Setter(value=AccessLevel.PROTECTED)
 	private NEMModInfo[] modInformation = null;
 	
-	@Getter
-	private String MCVersion = "1.5.2";
-	
 	private NEMEventListener listener;
+	
+	public String getMCVersion() {
+		return new CallableMinecraftVersion(null).minecraftVersion();
+	}
 	
 	@PreInit
 	public void LoadConfig(FMLPreInitializationEvent evt) throws NoSuchFieldException, SecurityException {
