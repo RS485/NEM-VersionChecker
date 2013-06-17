@@ -32,6 +32,9 @@ public class NEMVersionChecker {
 	@Setter(value=AccessLevel.PROTECTED)
 	private NEMModInfo[] modInformation = null;
 	
+	@Getter
+	private String MCVersion = "1.5.2";
+	
 	private NEMEventLisener listener;
 	
 	@PreInit
@@ -43,6 +46,6 @@ public class NEMVersionChecker {
 	
 	@Init
 	public void init(FMLInitializationEvent event) {
-		new NEMVersionDownloader("1.5.2");
+		new NEMVersionDownloader(getMCVersion());
 	}
 }

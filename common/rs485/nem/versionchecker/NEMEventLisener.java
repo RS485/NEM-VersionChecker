@@ -53,6 +53,7 @@ public class NEMEventLisener implements ITickHandler {
 						NEMGuiSlotModList newGui = new NEMGuiSlotModList(one, two, three);
 						newGui.registerScrollButtons((List) buttonList.get(FMLClientHandler.instance().getClient().currentScreen), 7, 8);
 						modList.set(FMLClientHandler.instance().getClient().currentScreen, newGui);
+						new NEMVersionDownloader(NEMVersionChecker.getInstance().getMCVersion());
 					}
 				} catch(IllegalArgumentException e) {
 					e.printStackTrace();
