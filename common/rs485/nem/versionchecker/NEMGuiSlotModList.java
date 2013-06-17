@@ -42,22 +42,26 @@ public class NEMGuiSlotModList extends GuiSlotModList {
             fontRenderer.drawString(fontRenderer.trimStringToWidth("DISABLED", listWidth - 10), this.left + 3 , var3 + 22, 0xFF2222);
         } else {
         	String addition = "";
+        	String addition2 = "";
         	int colorFirst = 0xFFFFFF;
         	int colorSecond = 0xCCCCCC;
-        	if(match == null) {
-        		colorFirst = 0xCCCC00;
-        	} else {
-        		if(match.isUpToDate(mc.getVersion())) {
-        			colorFirst = 0x00CC00;
-        		} else {
-        			colorFirst = 0xCC0000;
-        			addition = " : " + match.getVersion();
-        			colorSecond = 0x00CC00;
-        		}
+        	if(!mc.getModId().equals("mcp") && !mc.getModId().equals("FML")) {
+	        	if(match == null) {
+	        		colorFirst = 0xCCCC00;
+	        	} else {
+	        		if(match.isUpToDate(mc.getVersion()) || match.isUpToDate(mc.getDisplayVersion())) {
+	        			colorFirst = 0x00CC00;
+	        		} else {
+	        			colorFirst = 0xCC0000;
+	        			addition = " : " + match.getVersion();
+	        			addition2 = " : ";
+	        			colorSecond = 0x00CC00;
+	        		}
+	        	}
         	}
         	fontRenderer.drawString(fontRenderer.trimStringToWidth(mc.getName(), listWidth - 10), this.left + 3 , var3 + 2, colorFirst);
-            fontRenderer.drawString(fontRenderer.trimStringToWidth(mc.getDisplayVersion() + addition, listWidth - 10), this.left + 3 , var3 + 12, colorSecond);
-            fontRenderer.drawString(fontRenderer.trimStringToWidth(mc.getDisplayVersion() , listWidth - 10), this.left + 3 , var3 + 12, 0xCCCCCC);
+        	fontRenderer.drawString(fontRenderer.trimStringToWidth(mc.getDisplayVersion() + addition , listWidth - 10), this.left + 3 , var3 + 12, colorSecond);
+            fontRenderer.drawString(fontRenderer.trimStringToWidth(mc.getDisplayVersion() + addition2, listWidth - 10), this.left + 3 , var3 + 12, 0xCCCCCC);
             fontRenderer.drawString(fontRenderer.trimStringToWidth(mc.getMetadata() !=null ? mc.getMetadata().getChildModCountString() : "Metadata not found", listWidth - 10), this.left + 3 , var3 + 22, 0xCCCCCC);
         }
     }

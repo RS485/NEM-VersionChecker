@@ -15,7 +15,7 @@ import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
 @Mod(
-		modid = "NEMVersionChecker",
+		modid = "NEM-VersionChecker",
 		name = "NEM Version Checker",
 		/* %------------CERTIFICATE-SUM-----------% */
 		version = "%VERSION%")

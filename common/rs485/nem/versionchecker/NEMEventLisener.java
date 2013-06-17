@@ -22,14 +22,16 @@ public class NEMEventLisener implements ITickHandler {
 	private Field listWidth;
 	private Field buttonList;
 	
-	private boolean modified = false;
-	
 	public NEMEventLisener() throws NoSuchFieldException, SecurityException {
 		modList = GuiModList.class.getDeclaredField("modList");
 		parent = GuiSlotModList.class.getDeclaredField("parent");
 		mods = GuiSlotModList.class.getDeclaredField("mods");
 		listWidth = GuiScrollingList.class.getDeclaredField("listWidth");
-		buttonList = GuiScreen.class.getDeclaredField("buttonList");
+		try {
+			buttonList = GuiScreen.class.getDeclaredField("buttonList");
+		} catch(Exception e) {
+			buttonList = GuiScreen.class.getDeclaredField("field_73887_h");
+		}
 		modList.setAccessible(true);
 		parent.setAccessible(true);
 		mods.setAccessible(true);
@@ -42,24 +44,21 @@ public class NEMEventLisener implements ITickHandler {
 	public void tickStart(EnumSet<TickType> type, Object... tickData) {
 		if(type.contains(TickType.RENDER)) {
 			if(FMLClientHandler.instance().getClient().currentScreen.getClass() == GuiModList.class) {
-				if(!modified) {
-					try {
-						GuiSlotModList old = (GuiSlotModList) modList.get(FMLClientHandler.instance().getClient().currentScreen);
+				try {
+					GuiSlotModList old = (GuiSlotModList) modList.get(FMLClientHandler.instance().getClient().currentScreen);
+					if(old.getClass() != NEMGuiSlotModList.class) {
 						GuiModList one = (GuiModList) parent.get(old);
 						ArrayList<ModContainer> two = (ArrayList<ModContainer>) mods.get(old);
 						Integer three = (Integer) listWidth.get(old);
 						NEMGuiSlotModList newGui = new NEMGuiSlotModList(one, two, three);
 						newGui.registerScrollButtons((List) buttonList.get(FMLClientHandler.instance().getClient().currentScreen), 7, 8);
 						modList.set(FMLClientHandler.instance().getClient().currentScreen, newGui);
-					} catch(IllegalArgumentException e) {
-						e.printStackTrace();
-					} catch(IllegalAccessException e) {
-						e.printStackTrace();
 					}
-					modified = true;
+				} catch(IllegalArgumentException e) {
+					e.printStackTrace();
+				} catch(IllegalAccessException e) {
+					e.printStackTrace();
 				}
-			} else if(modified) {
-				modified = false;
 			}
 		}
 	}
