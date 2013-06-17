@@ -43,7 +43,7 @@ public class NEMEventLisener implements ITickHandler {
 	@Override
 	public void tickStart(EnumSet<TickType> type, Object... tickData) {
 		if(type.contains(TickType.RENDER)) {
-			if(FMLClientHandler.instance().getClient().currentScreen.getClass() == GuiModList.class) {
+			if(FMLClientHandler.instance().getClient().currentScreen!= null && FMLClientHandler.instance().getClient().currentScreen.getClass() == GuiModList.class) {
 				try {
 					GuiSlotModList old = (GuiSlotModList) modList.get(FMLClientHandler.instance().getClient().currentScreen);
 					if(old.getClass() != NEMGuiSlotModList.class) {
