@@ -1,7 +1,7 @@
 {
   "modinfoversion": 2,
   "modlist": [{
-    "modid": "NEMVersionChecker",
+    "modid": "NEM-VersionChecker",
     "name": "NEM Version Checker",
     "description": "",
     "version": "%VERSION%",
