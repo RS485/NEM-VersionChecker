@@ -3,7 +3,9 @@ package rs485.nem.versionchecker;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 
 public class NEMModInfo {
 	@Getter
@@ -21,8 +23,14 @@ public class NEMModInfo {
 	@Getter
 	private String modid;
 	
+	@Getter(value=AccessLevel.PRIVATE)
+	@Setter(value=AccessLevel.PRIVATE)
+	private Boolean upToDate = null;
+	
 	public boolean isUpToDate(String modVersion, String displayVersion) {
+		if(getUpToDate() != null) return getUpToDate();
 		if(modVersion.equals("%VERSION%") || displayVersion.equals("%VERSION%")) {
+			setUpToDate(false);
 			return false;
 		}
 		
@@ -56,12 +64,15 @@ public class NEMModInfo {
 		}
 		
 		if(modVersionValid) {
-			return isUpToDate(actualModVersion);
+			boolean result = isUpToDate(actualModVersion);
+			setUpToDate(result);
+			return result;
 		}
+		setUpToDate(false);
 		return false;
 	}
 	
-	public boolean isUpToDate(String modVersion) {
+	private boolean isUpToDate(String modVersion) {
 		Pattern versionPattern = Pattern.compile(Utils.allVersionRegex);
 		Matcher matcher;
 		matcher = versionPattern.matcher(modVersion);
