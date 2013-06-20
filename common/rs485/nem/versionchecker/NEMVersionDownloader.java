@@ -18,11 +18,16 @@ public class NEMVersionDownloader extends Thread {
 
 	private final Gson gson;
 	
-	@SuppressWarnings("resource")
 	public NEMVersionDownloader(String mcVersion) {
 		gson = new Gson();
 		nemMcVersion = mcVersion;
 		
+		// Start the thread
+		this.start();
+	}
+	
+	@SuppressWarnings("resource")
+	public void run() {
 		// Get the appropriate NEM version string
 		InputStream inputStream = null;
 		Scanner s = null;
@@ -34,7 +39,7 @@ public class NEMVersionDownloader extends Thread {
 			String string = s.next();
 			String[] availableMcVersions = gson.fromJson(string, String[].class);
 			for(String v : availableMcVersions) {
-				if(v.contains(mcVersion)) {
+				if(v.contains(nemMcVersion)) {
 					nemMcVersion = v;
 					break;
 				}
@@ -50,17 +55,11 @@ public class NEMVersionDownloader extends Thread {
 			} catch(Throwable e2) { }
 		}
 		
-		// Start the thread
-		this.start();
-	}
-	
-	@SuppressWarnings("resource")
-	public void run() {
 		try {
 			URL url = new URL("http://bot.notenoughmods.com/" + getNemMcVersion() + ".json");
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			InputStream inputStream = (InputStream) conn.getContent();
-			Scanner s = new Scanner(inputStream).useDelimiter("\\A");
+			inputStream = (InputStream) conn.getContent();
+			s = new Scanner(inputStream).useDelimiter("\\A");
 			String string = s.next();
 			s.close();
 			NEMModInfo[] mods = gson.fromJson(string, NEMModInfo[].class);
@@ -72,6 +71,11 @@ public class NEMVersionDownloader extends Thread {
 			NEMVersionChecker.getInstance().getLog().severe("Cannot get a modlist json for your Minecraft version " + nemMcVersion);
 			NEMVersionChecker.getInstance().disable();
 			e.printStackTrace();
+		} finally {
+			try {
+				s.close();
+				inputStream.close();
+			} catch(Throwable e2) { }
 		}
 	}
 }
