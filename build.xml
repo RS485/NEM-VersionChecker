@@ -14,50 +14,105 @@
 	<property name="jar.dir"              value="${build.dir}/dist"/>
 	<property name="lib.dir"              value="${build.dir}/lib"/>
 
-	<property name="mcp.dir"              value="${build.dir}/mcp"/>
-	<property name="forge.dir"            value="${mcp.dir}/forge"/>
+	<property name="forge.dir"            value="${build.dir}/forge"/>
+	<property name="mcp.dir"              value="${forge.dir}/mcp"/>
 	
 	<property name="clientsrc.dir"        value="${mcp.dir}/src/minecraft"/>
 	<property name="commonsrc.dir"        value="${clientsrc.dir}"/>
+
+	<property name="minecraftsrc.dir"        value="${mcp.dir}/src/minecraft"/>
+
+	<property file="${minecraftsrc.dir}/fmlversion.properties" />
 	
-	<property file="${clientsrc.dir}/fmlversion.properties" />
-	
-	<property name="downloadserver"       value="http://www.theZorro266.com"/>
-	<property name="downloadserver.dir"   value="rs485/"/>
+	<property name="downloadserver"       value="http://rs485.theZorro266.com"/>
+	<property name="downloadserver.dir"   value="external/"/>
 	<property name="downloadserver.full"  value="${downloadserver}/${downloadserver.dir}"/>
 
 	<property name="antcont.version"      value="1.0b3"/>
-	<property name="mcp.version"          value="751"/>
-	<property name="mc.version"           value="1.5.2"/>
-	<property name="forge.version"        value="7.8.0.685"/>
+	<property name="mc.version"           value="1.6.2"/>
+	<property name="forge.version"        value="9.10.0.837"/>
 	<property name="lombok.version"       value="0.11.8"/>
 	<property name="jarjar.version"       value="1.4"/>
 	<property name="gson.version"         value="2.2.4"/>
-	<property name="nem-vc.version"       value="0.1.0"/>
+    
+	<property name="nem-vc.version"       value="0.2.0"/>
 	<property name="nem-vc.version.full"  value="${nem-vc.version}.${BUILD_NUMBER}"/>
 
 	<!-- Targets -->
 	<target name="init-msg">
 		<echo message="Starting build for ${nem-vc.version.full} for MC ${mc.version}"/>
 	</target>
-	
-	<target name="clean">
-		<delete dir="${build.dir}"/>
-	</target>
 
-	<target name="setup">
+	<target name="download">
 		<mkdir dir="${download.dir}"/>
 
-		<get src="${downloadserver.full}mcp${mcp.version}.zip" dest="${download.dir}" usetimestamp="True"/>
-		<get src="${downloadserver.full}minecraftforge-src-${mc.version}-${forge.version}.zip" dest="${download.dir}" usetimestamp="True"/>
+		<get src="http://files.minecraftforge.net/minecraftforge/minecraftforge-src-${mc.version}-${forge.version}.zip" dest="${download.dir}" usetimestamp="True"/>
 		<get src="${downloadserver.full}ant-contrib-${antcont.version}-bin.zip" dest="${download.dir}" usetimestamp="True"/>
 		<get src="${downloadserver.full}jarjar-${jarjar.version}.jar" dest="${download.dir}" usetimestamp="True"/>
 		<get src="${downloadserver.full}gson-${gson.version}.jar" dest="${download.dir}" usetimestamp="True"/>
 		<get src="${downloadserver.full}lombok-${lombok.version}.jar" dest="${download.dir}" usetimestamp="True"/>
 
 		<echo message="Download finished"/>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+        
+		<echo message="Cleaned."/>
+	</target>
+
+	<target name="check-setup-forge" depends="download, clean">
+		<available file="${download.dir}/minecraftforge-setup-${mc.version}-${forge.version}.zip" property="setup.forge.present"/>
+	</target>
+
+	<target name="setup-forge" depends="check-setup-forge" unless="setup.forge.present">
+		<unzip dest="${build.dir}" failOnEmptyArchive="true">
+			<fileset dir="${download.dir}">
+				<include name="minecraftforge-src-${mc.version}-${forge.version}.zip"/>
+			</fileset>
+		</unzip>
+
+		<!-- Set executable permission on forge's *.sh -->
+		<chmod dir="${forge.dir}" perm="a+rx" includes="**.sh"/>
+
+		<!-- Install forge -->
+		<echo message="Starting forge install process"/>
+
+		<exec dir="${forge.dir}" executable="cmd" osfamily="windows" failonerror="true">
+			<arg value="/c"/>
+			<arg value="install.cmd"/>
+		</exec>
+
+		<exec dir="${forge.dir}" executable="sh" osfamily="unix" failonerror="true">
+			<arg value="install.sh"/>
+		</exec>
+
+		<echo message="Forge installation finished"/>
+
+		<zip destfile="${download.dir}/minecraftforge-setup-${mc.version}-${forge.version}.zip" basedir="${build.dir}"/>
+        
+		<echo message="Zipped Forge for faster access next builds"/>
+	</target>
+
+	<target name="unzip-forge" depends="check-setup-forge" if="setup.forge.present">
+		<unzip dest="${build.dir}" failOnEmptyArchive="true">
+			<fileset dir="${download.dir}">
+				<include name="minecraftforge-setup-${mc.version}-${forge.version}.zip"/>
+			</fileset>
+		</unzip>
+        
+		<echo message="Unzipped Forge. \o/"/>
+	</target>
+
+	<target name="setup" depends="unzip-forge, setup-forge">
+		<copy file="${download.dir}/lombok-${lombok.version}.jar" todir="${mcp.dir}/lib"/>
+		<copy file="${download.dir}/gson-${gson.version}.jar" todir="${mcp.dir}/lib"/>
+		
+		<echo message="Setup finished"/>
+	</target>
 
 
+	<target name="copySRC" >
 		<unzip dest="${lib.dir}" failOnEmptyArchive="true">
 			<fileset dir="${download.dir}">
 				<include name="ant-contrib-${antcont.version}-bin.zip"/>
@@ -69,77 +124,30 @@
 				<pathelement location="${lib.dir}/ant-contrib/ant-contrib-${antcont.version}.jar"/>
 			</classpath>
 		</taskdef>
-		
-		<unzip dest="${mcp.dir}" failOnEmptyArchive="true">
-			<fileset dir="${download.dir}">
-				<include name="mcp${mcp.version}.zip"/>
-			</fileset>
-		</unzip>
-		
-		<unzip dest="${mcp.dir}" failOnEmptyArchive="true">
-			<fileset dir="${download.dir}">
-				<include name="minecraftforge-src-${mc.version}-${forge.version}.zip"/>
-			</fileset>
-		</unzip>
-
-		<echo message="Unpacking finished"/>
-
-		<chmod file="${mcp.dir}/updatemd5.sh" perm="+x"/>
-		<chmod file="${mcp.dir}/updatemcp.sh" perm="+x"/>
-		<chmod file="${mcp.dir}/recompile.sh" perm="+x"/>
-		<chmod file="${mcp.dir}/reobfuscate_srg.sh" perm="+x"/>
-		<chmod file="${forge.dir}/install.sh" perm="+x"/>
-
-		<!-- if your building on OSX these 2 should be executable -->
-		<chmod file="${mcp.dir}/runtime/bin/astyle-osx" perm="+x"/>
-		<chmod file="${mcp.dir}/runtime/bin/jad-osx" perm="+x"/>
-		<!-- Install forge -->
-		<exec dir="${forge.dir}" executable="cmd" osfamily="windows" failonerror="true">
-			<arg line="/c install.cmd"/>
-		</exec>
-
-		<exec dir="${forge.dir}" executable="sh" osfamily="unix" failonerror="true">
-			<arg value="install.sh"/>
-		</exec>
-		
-		<copy file="${download.dir}/lombok-${lombok.version}.jar" todir="${mcp.dir}/lib"/>
-		<copy file="${download.dir}/gson-${gson.version}.jar" todir="${mcp.dir}/lib"/>
-		
-		<echo message="Decompile finished"/>
-	</target>
-
-
-	<target name="copySRC" >
-		<taskdef resource="net/sf/antcontrib/antcontrib.properties">
-			<classpath>
-				<pathelement location="${lib.dir}/ant-contrib/ant-contrib-${antcont.version}.jar"/>
-			</classpath>
-		</taskdef>
 		<echo message="Loaded ant-contrib"/>
 
 		<!-- Delete nem-vc source in build space -->
-		<delete dir="${commonsrc.dir}/rs485"/>
-		<echo message="Removed old code"/>
+		<delete dir="${minecraftsrc.dir}/rs485/nem/versionchecker"/>
 
 		<!-- Copy nem-vc source -->
-		<copy todir="${commonsrc.dir}">
+		<copy todir="${minecraftsrc.dir}">
 			<fileset dir="${src.dir}/common"/>
 		</copy>
-		<replace file="${commonsrc.dir}/rs485/nem/versionchecker/NEMVersionChecker.java" token="%VERSION%" value="${nem-vc.version.full}"/>
+		<replace file="${minecraftsrc.dir}/rs485/nem/versionchecker/NEMVersionChecker.java" token="%VERSION%" value="${nem-vc.version.full}"/>
+		<replace file="${minecraftsrc.dir}/rs485/nem/versionchecker/NEMVersionChecker.java" token="%MCVERSION%" value="${mc.version}"/>
 		
 		<echo message="Loading FingerPrint"/>
 		<if>
 			<available file="${sign.dir}/.fingerprint"/>
 			<then>
 				<loadfile property="fingerprint" srcFile="${sign.dir}/.fingerprint"/>
-				<replace file="${commonsrc.dir}/rs485/nem/versionchecker/NEMVersionChecker.java" token="%------------CERTIFICATE-SUM-----------%" value='*/ certificateFingerprint="${fingerprint}", /*'/>
+				<replace file="${minecraftsrc.dir}/rs485/nem/versionchecker/NEMVersionChecker.java" token="%------------CERTIFICATE-SUM-----------%" value='*/ certificateFingerprint="${fingerprint}", /*'/>
 			</then>
 		</if>
 	</target>
 
 
 	<target name="compile" depends="copySRC">
-
 		<echo message="Compiling version ${nem-vc.version.full}"/>
 
 		<!-- Recompile -->
@@ -148,7 +156,7 @@
 		</exec>
 
 		<exec dir="${mcp.dir}" executable="sh" osfamily="unix" failonerror="true">
-			<arg value="recompile.sh"/>
+			<arg line="recompile.sh --client"/>
 		</exec>
 
 		<!-- Reobf -->
@@ -157,15 +165,15 @@
 		</exec>
 
 		<exec dir="${mcp.dir}" executable="sh" osfamily="unix" failonerror="true">
-			<arg value="reobfuscate_srg.sh"/>
+			<arg line="reobfuscate_srg.sh --client"/>
 		</exec>
 
-		<!-- Copy nem-vc classes -->
+		<!-- Copy LP classes -->
 		<copy todir="${classes.dir}/client">
 			<fileset dir="${mcp.dir}/reobf/minecraft"/>
 		</copy>
 
-		<!-- Copy resoucres -->
+		<!-- Copy mcmod.info -->
 		<copy todir="${classes.dir}/client">
 			<fileset dir="${src.dir}/resources"></fileset>
 		</copy>
@@ -174,7 +182,6 @@
 		<replace file="${classes.dir}/client/mcmod.info" token="%MCVERSION%" value="${mc.version}"/>
 
 		<echo message="Compiling finished"/>
-
 	</target>
 
 	<target name="package-simple" depends="compile">
@@ -217,9 +224,8 @@
 		<echo message="Packing finished"/>
 
 	</target>
-		
-	<target name="main" depends="init-msg, clean, setup, package-simple"/>
 	
-	<target name="ci" depends="init-msg, clean, setup, package-sign"/>
-
+	<target name="main" depends="init-msg, setup, package-simple"/>
+	
+	<target name="ci" depends="init-msg, setup, package-sign"/>
 </project>
